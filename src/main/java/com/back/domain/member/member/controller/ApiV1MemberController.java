@@ -24,6 +24,7 @@ public class ApiV1MemberController {
     private final MemberService memberService;
     private final Rq rq;
 
+
     record MemberJoinReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
@@ -54,6 +55,7 @@ public class ApiV1MemberController {
         );
     }
 
+
     record MemberLoginReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
@@ -66,7 +68,8 @@ public class ApiV1MemberController {
 
     record MemberLoginResBody(
             MemberDto item,
-            String apiKey
+            String apiKey,
+            String accessToken
     ) {
     }
 
@@ -80,27 +83,34 @@ public class ApiV1MemberController {
         if (!member.getPassword().equals(reqBody.password()))
             throw new ServiceException("401-2", "비밀번호가 일치하지 않습니다.");
 
+        String accessToken = memberService.genAccessToken(member);
+
         rq.setCookie("apiKey", member.getApiKey());
+        rq.setCookie("accessToken", accessToken);
 
         return new RsData<>(
                 "200-1",
                 "%s님 환영합니다.".formatted(member.getNickname()),
                 new MemberLoginResBody(
                         new MemberDto(member),
-                        member.getApiKey()
+                        member.getApiKey(),
+                        accessToken
                 )
         );
     }
 
+
     @DeleteMapping("/logout")
     public RsData<Void> logout() {
         rq.deleteCookie("apiKey");
+        rq.deleteCookie("accessToken");
 
         return new RsData<>(
                 "200-1",
                 "로그아웃 되었습니다."
         );
     }
+
 
     @GetMapping("/me")
     public RsData<MemberDto> me() {
