@@ -5,6 +5,7 @@ import com.back.domain.member.member.service.MemberService;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.domain.post.postComment.entity.PostComment;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,6 +98,7 @@ public class ApiV1PostCommentControllerTest {
         }
     }
 
+
     @Test
     @DisplayName("댓글 삭제")
     void t3() throws Exception {
@@ -122,6 +124,31 @@ public class ApiV1PostCommentControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
                 .andExpect(jsonPath("$.msg").value("%d번 댓글이 삭제되었습니다.".formatted(id)));
     }
+
+    @Test
+    @DisplayName("댓글 삭제, without permission")
+    void t7() throws Exception {
+        int postId = 1;
+        int id = 1;
+
+        Member actor = memberService.findByUsername("user3").get();
+        String actorApiKey = actor.getApiKey();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/api/v1/posts/%d/comments/%d".formatted(postId, id))
+                                .header("Authorization", "Bearer " + actorApiKey)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.resultCode").value("403-2"))
+                .andExpect(jsonPath("$.msg").value("%d번 댓글 삭제 권한이 없습니다.".formatted(id)));
+    }
+
 
     @Test
     @DisplayName("댓글 수정")
@@ -184,6 +211,7 @@ public class ApiV1PostCommentControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("403-1"))
                 .andExpect(jsonPath("$.msg").value("%d번 댓글 수정 권한이 없습니다.".formatted(id)));
     }
+
 
     @Test
     @DisplayName("댓글 작성")
