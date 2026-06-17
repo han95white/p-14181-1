@@ -66,8 +66,6 @@ public class AuthTokenServiceTest {
 
         assertThat(jwt).isNotBlank();
 
-        System.out.println("jwt = " + jwt);
-
         // 키가 유효한지 테스트
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
@@ -105,7 +103,7 @@ public class AuthTokenServiceTest {
     }
 
     @Test
-    @DisplayName("authTokenService.genAccessToken(member);")
+    @DisplayName("authTokenService.genAccessToken(member) authTokenService.payload(accessToken);")
     void t4() {
         Member memberUser1 = memberService.findByUsername("user1").get();
 
@@ -114,5 +112,15 @@ public class AuthTokenServiceTest {
         assertThat(accessToken).isNotBlank();
 
         System.out.println("accessToken = " + accessToken);
+
+        Map<String, Object> parsedPayload = authTokenService.payload(accessToken);
+
+        assertThat(parsedPayload)
+                .containsAllEntriesOf(
+                        Map.of(
+                                "id", memberUser1.getId(),
+                                "username", memberUser1.getUsername()
+                        )
+                );
     }
 }
