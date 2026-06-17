@@ -51,34 +51,31 @@ public class Rq {
     }
 
     private String getCookieValue(String name, String defaultValue) {
-        return Optional
-                .ofNullable(req.getCookies())
-                .flatMap(
-                        cookies ->
-                                Arrays.stream(cookies)
-                                        .filter(cookie -> cookie.getName().equals(name))
-                                        .map(Cookie::getValue)
-                                        .filter(value -> !value.isBlank())
-                                        .findFirst()
-                )
+        return Arrays.stream(Optional.ofNullable(req.getCookies()).orElse(new Cookie[0]))
+                .filter(cookie -> name.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .filter(value -> value != null && !value.isBlank())
+                .findFirst()
                 .orElse(defaultValue);
     }
 
     public void setCookie(String name, String value) {
+        if (value == null) value = "";
+
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+
+        // 값이 없다면 해당 쿠키변수를 삭제하라는 뜻
+        if (value.isBlank()) {
+            cookie.setMaxAge(0);
+        }
 
         resp.addCookie(cookie);
     }
 
     public void deleteCookie(String name) {
-        Cookie cookie = new Cookie(name, "");
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(0);
-
-        resp.addCookie(cookie);
+        setCookie(name, null);
     }
 
 }
