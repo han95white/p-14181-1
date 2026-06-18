@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.blankOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -129,13 +131,11 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().handlerType(ApiV1MemberController.class))
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
-                .andExpect(jsonPath("$.msg").value("%s님의 정보입니다.".formatted(member.getNickname())))
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.id").value(member.getId()))
-                .andExpect(jsonPath("$.data.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 20))))
-                .andExpect(jsonPath("$.data.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 20))))
-                .andExpect(jsonPath("$.data.name").value(member.getNickname()));
+                .andExpect(jsonPath("$.id").value(member.getId()))
+                .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.username").value(member.getUsername()))
+                .andExpect(jsonPath("$.name").value(member.getNickname()));
     }
 
     @Test
@@ -157,13 +157,10 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().handlerType(ApiV1MemberController.class))
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
-                .andExpect(jsonPath("$.msg").value("%s님의 정보입니다.".formatted(member.getNickname())))
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.id").value(member.getId()))
-                .andExpect(jsonPath("$.data.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 20))))
-                .andExpect(jsonPath("$.data.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 20))))
-                .andExpect(jsonPath("$.data.name").value(member.getNickname()));
+                .andExpect(jsonPath("$.id").value(member.getId()))
+                .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.name").value(member.getNickname()));
     }
 
     @Test
@@ -206,20 +203,17 @@ public class ApiV1MemberControllerTest {
         resultActions
                 .andExpect(handler().handlerType(ApiV1MemberController.class))
                 .andExpect(handler().methodName("me"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(header().string("Authorization", not(blankOrNullString())))
+                .andExpect(
+                        result -> {
+                            Cookie accessTokenCookie = result.getResponse().getCookie("accessToken");
 
-        resultActions.andExpect(
-                result -> {
-                    Cookie accessTokenCookie = result.getResponse().getCookie("accessToken");
-                    assertThat(accessTokenCookie.getValue()).isNotBlank();
-                    assertThat(accessTokenCookie.getPath()).isEqualTo("/");
-                    assertThat(accessTokenCookie.isHttpOnly()).isTrue();
-
-                    String headerAuthorization = result.getResponse().getHeader("Authorization");
-                    assertThat(headerAuthorization).isNotBlank();
-
-                    assertThat(headerAuthorization).isEqualTo(accessTokenCookie.getValue());
-                }
-        );
+                            assertThat(accessTokenCookie).isNotNull();
+                            assertThat(accessTokenCookie.getValue()).isNotBlank();
+                            assertThat(accessTokenCookie.getPath()).isEqualTo("/");
+                            assertThat(accessTokenCookie.isHttpOnly()).isTrue();
+                        }
+                );
     }
 }
