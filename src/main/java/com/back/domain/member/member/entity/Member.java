@@ -32,11 +32,22 @@ public class Member extends BaseEntity {
         this.apiKey = UUID.randomUUID().toString();
     }
 
+    public String getName() {
+        return nickname;
+    }
+
     public void setName(String name) {
         this.nickname = name;
     }
 
     public void modifyApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public boolean isAdmin() {
+        if ("system".equals(username)) return true;
+        if ("admin".equals(username)) return true;
+
+        return false;
     }
 }
