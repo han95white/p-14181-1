@@ -22,7 +22,7 @@ public class AuthTokenService {
         return Ut.jwt.toString(
                 secret,
                 expireSeconds,
-                Map.of("id", id, "username", username)
+                Map.of("id", id, "username", username, "name", name)
         );
     }
 
@@ -34,6 +34,6 @@ public class AuthTokenService {
         int id = (int) parsedPayload.get("id");
         String username = (String) parsedPayload.get("username");
 
-        return Map.of("id", id, "username", username);
+        return Map.of("id", id, "username", username, "name", name);
     }
 }
